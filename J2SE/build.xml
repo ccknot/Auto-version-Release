@@ -280,11 +280,11 @@
 		<!-- generate classpath -->
 		<echo file="${work.dir}/script/set_classpath.sh" append="false">
 				${shell_script_head}
-				classpath=".:./lib/${jar.name}.jar:${gen.linux.classpath}"
+				classpath=".:./lib/${project.name}.jar:${gen.linux.classpath}"
 		</echo>
 		<echo file="${work.dir}/script/set_classpath.bat" append="false" >
 				${bat_script_head}
-				set classpath=.;./bin;./lib/${jar.name}.jar;${gen.windows.classpath}
+				set classpath=.;./bin;./lib/${project.name}.jar;${gen.windows.classpath}
 		</echo>
 		<!-- generate version -->
 		<echo file="${work.dir}/script/version.sh" append="false">
