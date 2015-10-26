@@ -191,7 +191,7 @@
     <target name="package" depends="jar_full,generate_script">
         <echo>package war file....</echo>
         
-        <copy todir="${compile.path}">
+        <copy todir="${compile.path}" overwrite="true">
 			<fileset dir="${source.path}">
 				<!-- copy libs -->
 				<include name="lib/" />
