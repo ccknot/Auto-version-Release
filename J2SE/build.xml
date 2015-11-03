@@ -18,6 +18,13 @@
     <!-- svn增量文件编译后保存目录 -->
     <property name="increment.compile.path" location="${work.dir}/increment/compile/${project.name}"/>
     
+    <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~构建准备~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+	<!-- ANT插件path -->
+	<path id="ant.extend.classpath">
+		<fileset dir="${ant.extend.path}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
     <!-- 项目编译classpath -->
     <path id="build.classpath">
         <fileset dir="${full.source.path}">
@@ -37,8 +44,9 @@
         </fileset>
     </path>
     
+    <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~引入SVNANT插件~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
     <!-- 添加svnant插件 -->
-    <typedef resource="org/tigris/subversion/svnant/svnantlib.xml"/>
+    <typedef resource="org/tigris/subversion/svnant/svnantlib.xml" classpathref="ant.extend.classpath" />
     <svnSetting id="svn.settings" javahl="false" svnkit="true" username="${svn.username}" password="${svn.password}" failonerror="true"/>
     
     <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~初始化~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -71,7 +79,7 @@
     <!-- 测试svn是否有效 -->
     <target name="tool-available" depends="init">
         <echo message="run task test svnant is available"></echo>
-        <available resource="org/tigris/subversion/svnant/svnantlib.xml" classpathref="full.project.classpath" property="available.svnant"/>
+        <available resource="org/tigris/subversion/svnant/svnantlib.xml" classpathref="ant.extend.classpath" property="available.svnant"/>
         <echo message="SVN-ANT is available = ${available.svnant}"></echo>
     </target>
         
@@ -79,14 +87,14 @@
     <target name="checkout" depends="tool-available">
         <echo message="checkout project code: ${new.svn.url}"></echo>
         <svn refid="svn.settings">
-             <checkout url="${new.svn.url}" destPath="${full.source.path}" revision="HEAD" force="true"/>
+             <checkout url="${new.svn.url}" destPath="${full.source.path}" revision="${new.svn.revision}" force="true"/>
         </svn>
     </target>
 
    <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~公共编译~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
     <!-- 文件编码处理，处理一个项目中的多种编码问题 -->
     <target name="encoding_process">
-        <java classname="com.zhangzq.svnant.FileEncodingConvert" classpath="${ant.home}/lib/ExportIF.jar" fork="true">
+        <java classname="com.zhangzq.svnant.FileEncodingConvert" classpathref="ant.extend.classpath" fork="true">
             <arg value="${source.path}"/>
             <arg value="${javac.encoding}"/>
         </java>
@@ -95,8 +103,9 @@
     <!-- javac编译 -->
     <target name="compile">
         <echo>compile ${source.path} ......</echo>
-        <delete dir="${compile.path}" failonerror="false" deleteonexit="true" excludes="**/lib"/>
+        <delete dir="${compile.path}" failonerror="false" deleteonexit="true" excludes="**/lib" includeemptydirs="true"/>
         <mkdir dir="${compile.path}/bin"/>
+        <mkdir dir="${source.path}/src"/>
         
         <antcall target="encoding_process">
             <param name="source.path" value="${source.path}"/>
@@ -241,6 +250,7 @@
     
     <!-- 导出增量文件 -->
     <target name="increment" depends="diff">
+        <delete dir="${increment.source.path}" includes="**/*" includeemptydirs="true"/>
         <java classname="com.zhangzq.svnant.ExportIncrementFiles" classpath="${ant.home}/lib/ExportIF.jar" fork="true">
             <arg value="${diff.file.path}"/>
             <arg value="${full.source.path}/"/>
